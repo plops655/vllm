@@ -393,7 +393,9 @@ class XPUModelRunner(ModelRunnerBase[ModelInputForXPUWithSamplingMetadata]):
         self.sliding_window = model_config.get_sliding_window()
         self.block_size = cache_config.block_size
 
+        #NOTE(jayanth): Must adapt this for MPS
         self.attn_backend = get_attn_backend(
+            # TODO: Ask ChatGPT what head size is
             self.model_config.get_head_size(),
             self.model_config.dtype,
             self.kv_cache_dtype,

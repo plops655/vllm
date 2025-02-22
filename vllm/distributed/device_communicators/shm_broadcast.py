@@ -4,6 +4,9 @@ import os
 import pickle
 import sys
 import time
+
+import weakref
+
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from multiprocessing import shared_memory
@@ -96,6 +99,7 @@ class ShmRingBuffer:
         get the name of the shared memory and open it, so that they can access the
         same shared memory buffer.
         """# noqa
+        self.name = name
         self.n_reader = n_reader
         self.metadata_size = 1 + n_reader
         self.max_chunk_bytes = max_chunk_bytes
@@ -114,6 +118,7 @@ class ShmRingBuffer:
             with memoryview(self.shared_memory.buf[self.metadata_offset:]
                             ) as metadata_buffer:
                 torch.frombuffer(metadata_buffer, dtype=torch.uint8).fill_(0)
+            logger.debug(f"Shared Ring Buffer with name {name} created")
         else:
             # we are opening an existing buffer
             self.is_creator = False
@@ -144,9 +149,11 @@ class ShmRingBuffer:
 
     def __del__(self):
         if hasattr(self, "shared_memory"):
-            self.shared_memory.close()
+            if self.shared_memory:
+                self.shared_memory.close()
             if self.is_creator:
                 self.shared_memory.unlink()
+                logger.debug(f"Shared Ring Buffer with name {self.name} destroyed")
 
     @contextmanager
     def get_data(self, current_idx: int):
@@ -172,6 +179,11 @@ class Handle:
     local_subscribe_port: Optional[int] = None
     remote_subscribe_port: Optional[int] = None
 
+context1 = Context()
+process_socket = context1.socket(XPUB)
+process_socket.setsockopt(XPUB_VERBOSE, True)
+# Get open port
+process_port = get_open_port()
 
 class MessageQueue:
 
@@ -184,6 +196,9 @@ class MessageQueue:
         max_chunks: int = 10,
         connect_ip: Optional[str] = None,
     ):
+
+        self._finalizer = weakref.finalize(self, self.shutdown)
+
         if local_reader_ranks is None:
             local_reader_ranks = list(range(n_local_reader))
         else:
@@ -528,3 +543,14 @@ class MessageQueue:
             buffer_io = MessageQueue.create_from_handle(handle, group_rank)
         buffer_io.wait_until_ready()
         return buffer_io
+
+    #NOTE(jayanth): It would be good to declare one global context.
+    def shutdown(self):
+        if self._is_local_reader and self.local_socket:
+            self.local_socket.close()
+            self.local_socket = None
+        elif self._is_remote_reader and self.remote_socket:
+            self.remote_socket.close()
+            self.remote_socket = None
+        if self.buffer:
+            del self.buffer

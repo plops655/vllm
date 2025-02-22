@@ -215,3 +215,6 @@ class PyNcclCommunicator:
         self.nccl.ncclBroadcast(sendbuff, recvbuff, tensor.numel(),
                                 ncclDataTypeEnum.from_torch(tensor.dtype), src,
                                 self.comm, cudaStream_t(stream.cuda_stream))
+
+    def __del__(self):
+        self.nccl.ncclCommDestroy(self.communicator)
