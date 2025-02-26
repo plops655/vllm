@@ -909,6 +909,7 @@ class BenchmarkLatencyCommand(CLISubcommand):
         )
 
         latency_parser = EngineArgs.add_cli_args(subparsers)
+        return latency_parser
 
 class BenchmarkServingCommand(CLISubcommand):
     def cmd(args: argparse.Namespace) -> None:
