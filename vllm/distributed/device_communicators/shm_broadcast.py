@@ -5,8 +5,6 @@ import pickle
 import sys
 import time
 
-import weakref
-
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from multiprocessing import shared_memory
@@ -118,7 +116,7 @@ class ShmRingBuffer:
             with memoryview(self.shared_memory.buf[self.metadata_offset:]
                             ) as metadata_buffer:
                 torch.frombuffer(metadata_buffer, dtype=torch.uint8).fill_(0)
-            logger.debug(f"Shared Ring Buffer with name {name} created")
+            logger.debug("Shared Ring Buffer with name", name, "created")
         else:
             # we are opening an existing buffer
             self.is_creator = False
@@ -196,8 +194,6 @@ class MessageQueue:
         max_chunks: int = 10,
         connect_ip: Optional[str] = None,
     ):
-
-        self._finalizer = weakref.finalize(self, self.shutdown)
 
         if local_reader_ranks is None:
             local_reader_ranks = list(range(n_local_reader))
@@ -543,14 +539,3 @@ class MessageQueue:
             buffer_io = MessageQueue.create_from_handle(handle, group_rank)
         buffer_io.wait_until_ready()
         return buffer_io
-
-    #NOTE(jayanth): It would be good to declare one global context.
-    def shutdown(self):
-        if self._is_local_reader and self.local_socket:
-            self.local_socket.close()
-            self.local_socket = None
-        elif self._is_remote_reader and self.remote_socket:
-            self.remote_socket.close()
-            self.remote_socket = None
-        if self.buffer:
-            del self.buffer

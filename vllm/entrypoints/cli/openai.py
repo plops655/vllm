@@ -920,4 +920,4 @@ class BenchmarkServingCommand(CLISubcommand):
         pass
 
 def cmd_init() -> List[CLISubcommand]:
-    return [ChatCommand(), CompleteCommand(), BenchmarkThroughputCommand()]
+    return [ChatCommand(), CompleteCommand(), BenchmarkThroughputCommand(), BenchmarkLatencyCommand()]
