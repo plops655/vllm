@@ -98,7 +98,6 @@ class ShmRingBuffer:
         get the name of the shared memory and open it, so that they can access the
         same shared memory buffer.
         """# noqa
-        self.name = name
         self.n_reader = n_reader
         self.metadata_size = 1 + n_reader
         self.max_chunk_bytes = max_chunk_bytes
@@ -117,7 +116,6 @@ class ShmRingBuffer:
             with memoryview(self.shared_memory.buf[self.metadata_offset:]
                             ) as metadata_buffer:
                 torch.frombuffer(metadata_buffer, dtype=torch.uint8).fill_(0)
-            logger.debug("Shared Ring Buffer with name", name, "created")
         else:
             # we are opening an existing buffer
             self.is_creator = False
@@ -148,11 +146,9 @@ class ShmRingBuffer:
 
     def __del__(self):
         if hasattr(self, "shared_memory"):
-            if self.shared_memory:
-                self.shared_memory.close()
+            self.shared_memory.close()
             if self.is_creator:
                 self.shared_memory.unlink()
-                logger.debug(f"Shared Ring Buffer with name {self.name} destroyed")
 
     @contextmanager
     def get_data(self, current_idx: int):

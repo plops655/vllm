@@ -865,15 +865,12 @@ class GPUModelRunner(LoRAModelRunnerMixin):
     def get_model(self) -> nn.Module:
         return self.model
 
-    # NOTE(Jayanth): What level in the stack is this? Does it utilize Ray or is it one level below?
-    # What would we do to replace use with torch? Ray smart-executes jobs. What are we using here?
     @torch.inference_mode()
     def execute_model(
         self,
         scheduler_output: "SchedulerOutput",
         intermediate_tensors: Optional[IntermediateTensors] = None,
     ) -> Union[ModelRunnerOutput, torch.Tensor]:
-        # NOTE(jayanth): Call scheduler metadata
         self._update_states(scheduler_output)
 
         if self.is_multimodal_model:
