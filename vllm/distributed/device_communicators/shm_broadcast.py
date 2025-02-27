@@ -174,12 +174,6 @@ class Handle:
     remote_subscribe_addr: Optional[str] = None
     remote_addr_ipv6: bool = False
 
-context1 = Context()
-process_socket = context1.socket(XPUB)
-process_socket.setsockopt(XPUB_VERBOSE, True)
-# Get open port
-process_port = get_open_port()
-
 class MessageQueue:
 
     def __init__(
