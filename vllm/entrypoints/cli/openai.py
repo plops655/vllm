@@ -267,13 +267,17 @@ def save_to_pytorch_benchmark_format(
             json.dump(pt_records, f)
 
 class BenchmarkThroughputCommand(CLISubcommand):
+
+    lora_tokenizer_cache: Dict[int, AnyTokenizer] = {}
+
     def __init___(self):
         self.name = "benchmark-throughput"
         super().__init__()
 
     @staticmethod
-    def _get_prompt_for_image_model(self, question: str, *, model: str) -> str:
-        """Prepend and append special tokens around the question to form a prompt.
+    def _get_prompt_for_image_model(question: str, *, model: str) -> str:
+        """Prepend and append special tokens around the question
+           to form a prompt.
 
         Args:
             question: The input question text to wrap with special tokens
@@ -296,19 +300,16 @@ class BenchmarkThroughputCommand(CLISubcommand):
     def lora_path_on_disk(self, lora_path: str) -> str:
         return get_adapter_absolute_path(lora_path)
 
-    lora_tokenizer_cache: Dict[int, AnyTokenizer] = {}
-
     def get_random_lora_request(
             self, args: argparse.Namespace
     ) -> Tuple[LoRARequest, Optional[AnyTokenizer]]:
-        global lora_tokenizer_cache
         lora_id = random.randint(1, args.max_loras)
         lora_request = LoRARequest(lora_name=str(lora_id),
-                                   lora_int_id=lora_id,
-                                   lora_path=self.lora_path_on_disk(args.lora_path))
-        if lora_id not in lora_tokenizer_cache:
-            lora_tokenizer_cache[lora_id] = get_lora_tokenizer(lora_request)
-        return lora_request, lora_tokenizer_cache[lora_id]
+                            lora_int_id=lora_id,
+                            lora_path=self.lora_path_on_disk(args.lora_path))
+        if lora_id not in self.lora_tokenizer_cache:
+            self.lora_tokenizer_cache[lora_id] = get_lora_tokenizer(lora_request)
+        return lora_request, self.lora_tokenizer_cache[lora_id]
 
     def sample_requests(self, tokenizer: PreTrainedTokenizerBase,
                         args: argparse.Namespace) -> List[SampleRequest]:
