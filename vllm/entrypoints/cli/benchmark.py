@@ -518,59 +518,66 @@ class BenchmarkThroughputCommand(CLISubcommand):
     def subparser_init(
             self,
             subparsers: argparse._SubParsersAction) -> FlexibleArgumentParser:
-        subparsers.add_argument("--backend",
+
+        throughput_parser = subparsers.add_parser(
+            "benchmark throughput",
+            help=("Benchmark throughput of various backends, including vLLM, "
+                  "on multiple prompts"),
+            usage="vllm benchmark-throughput [options]")
+
+        throughput_parser.add_argument("--backend",
                             type=str,
                             choices=["vllm", "hf", "mii"],
                             default="vllm")
-        subparsers.add_argument("--dataset",
+        throughput_parser.add_argument("--dataset",
                             type=str,
                             default=None,
                             help="Path to the dataset. The dataset is expected to "
                                  "be a json in form of List[Dict[..., conversations: "
                                  "List[Dict[..., value: <prompt_or_response>]]]]")
-        subparsers.add_argument("--input-len",
+        throughput_parser.add_argument("--input-len",
                             type=int,
                             default=None,
                             help="Input prompt length for each request")
-        subparsers.add_argument("--output-len",
+        throughput_parser.add_argument("--output-len",
                             type=int,
                             default=None,
                             help="Output length for each request. Overrides the "
                                  "output length from the dataset.")
-        subparsers.add_argument("--n",
+        throughput_parser.add_argument("--n",
                             type=int,
                             default=1,
                             help="Number of generated sequences per prompt.")
-        subparsers.add_argument("--num-prompts",
+        throughput_parser.add_argument("--num-prompts",
                             type=int,
                             default=1000,
                             help="Number of prompts to process.")
-        subparsers.add_argument("--hf-max-batch-size",
+        throughput_parser.add_argument("--hf-max-batch-size",
                             type=int,
                             default=None,
                             help="Maximum batch size for HF backend.")
-        subparsers.add_argument(
+        throughput_parser.add_argument(
             '--output-json',
             type=str,
             default=None,
             help='Path to save the throughput results in JSON format.')
-        subparsers.add_argument("--async-engine",
+        throughput_parser.add_argument("--async-engine",
                             action='store_true',
                             default=False,
                             help="Use vLLM async engine rather than LLM class.")
-        subparsers.add_argument("--disable-frontend-multiprocessing",
+        throughput_parser.add_argument("--disable-frontend-multiprocessing",
                             action='store_true',
                             default=False,
                             help="Disable decoupled async engine frontend.")
         # LoRA
-        subparsers.add_argument(
+        throughput_parser.add_argument(
             "--lora-path",
             type=str,
             default=None,
             help="Path to the lora adapters to use. This can be an absolute path, "
                  "a relative path, or a Hugging Face model identifier.")
 
-        throughput_parser = AsyncEngineArgs.add_cli_args(subparsers)
+        throughput_parser = AsyncEngineArgs.add_cli_args(throughput_parser)
         args = throughput_parser.parse_args()
         if args.tokenizer is None:
             args.tokenizer = args.model
@@ -716,46 +723,51 @@ class BenchmarkLatencyCommand(CLISubcommand):
     def subparser_init(
             self,
             subparsers: argparse._SubParsersAction) -> FlexibleArgumentParser:
-        subparsers.add_argument("--input-len", type=int, default=32)
-        subparsers.add_argument("--output-len", type=int, default=128)
-        subparsers.add_argument("--batch-size", type=int, default=8)
-        subparsers.add_argument(
+        latency_parser = subparsers.add_parser(
+            "benchmark latency",
+            help="Benchmark the latency of a request with vLLM",
+            usage="vllm benchmark-latency [options]")
+
+        latency_parser.add_argument("--input-len", type=int, default=32)
+        latency_parser.add_argument("--output-len", type=int, default=128)
+        latency_parser.add_argument("--batch-size", type=int, default=8)
+        latency_parser.add_argument(
             "--n",
             type=int,
             default=1,
             help="Number of generated sequences per prompt.",
         )
-        subparsers.add_argument("--use-beam-search", action="store_true")
-        subparsers.add_argument(
+        latency_parser.add_argument("--use-beam-search", action="store_true")
+        latency_parser.add_argument(
             "--num-iters-warmup",
             type=int,
             default=10,
             help="Number of iterations to run for warmup.",
         )
-        subparsers.add_argument("--num-iters",
+        latency_parser.add_argument("--num-iters",
                             type=int,
                             default=30,
                             help="Number of iterations to run.")
-        subparsers.add_argument(
+        latency_parser.add_argument(
             "--profile",
             action="store_true",
             help="profile the generation process of a single batch",
         )
-        subparsers.add_argument(
+        latency_parser.add_argument(
             "--profile-result-dir",
             type=str,
             default=None,
             help=("path to save the pytorch profiler output. Can be visualized "
                   "with ui.perfetto.dev or Tensorboard."),
         )
-        subparsers.add_argument(
+        latency_parser.add_argument(
             "--output-json",
             type=str,
             default=None,
             help="Path to save the latency results in JSON format.",
         )
 
-        latency_parser = EngineArgs.add_cli_args(subparsers)
+        latency_parser = EngineArgs.add_cli_args(latency_parser)
         return latency_parser
 
 #TODO: Right code for vllm benchmark-serving command
