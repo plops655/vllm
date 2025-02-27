@@ -1,7 +1,5 @@
 import argparse
 import os
-import signal
-import sys
 from typing import Any, Dict, List, Optional, Tuple
 import dataclasses
 import json
@@ -9,9 +7,6 @@ import random
 import time
 from pathlib import Path
 from functools import cache
-
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam
 
 from vllm import LLM, SamplingParams
 from vllm.entrypoints.cli.types import CLISubcommand
@@ -106,6 +101,17 @@ def save_to_pytorch_benchmark_format(
             json.dump(pt_records, f)
 
 class BenchmarkThroughputCommand(CLISubcommand):
+    """
+    vllm benchmark-throughput \
+    --model meta-llama/Llama-2-7b-hf \
+    --tokenizer meta-llama/Llama-2-7b-hf \
+    --dtype float16 \
+    --tensor-parallel-size 2 \
+    --max-model-len 4096 \
+    --prompt-len 128 \
+    --gen-len 128 \
+    --num-prompts 100
+    """
 
     lora_tokenizer_cache: Dict[int, AnyTokenizer] = {}
 
@@ -225,7 +231,6 @@ class BenchmarkThroughputCommand(CLISubcommand):
 
     @staticmethod
     def run_vllm(
-            cls,
             requests: List[SampleRequest],
             n: int,
             engine_args: EngineArgs,
@@ -285,7 +290,6 @@ class BenchmarkThroughputCommand(CLISubcommand):
 
     @staticmethod
     async def run_vllm_async(
-            self,
             requests: List[SampleRequest],
             n: int,
             engine_args: AsyncEngineArgs,
@@ -337,7 +341,6 @@ class BenchmarkThroughputCommand(CLISubcommand):
 
     @staticmethod
     def run_hf(
-            self,
             requests: List[SampleRequest],
             model: str,
             tokenizer: PreTrainedTokenizerBase,
@@ -396,7 +399,6 @@ class BenchmarkThroughputCommand(CLISubcommand):
 
     @staticmethod
     def run_mii(
-            self,
             requests: List[SampleRequest],
             model: str,
             tensor_parallel_size: int,
