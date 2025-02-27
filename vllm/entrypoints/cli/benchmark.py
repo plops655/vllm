@@ -609,6 +609,11 @@ class BenchmarkThroughputCommand(CLISubcommand):
         return throughput_parser
 
 class BenchmarkLatencyCommand(CLISubcommand):
+
+    def __init___(self):
+        self.name = "benchmark-latency"
+        super().__init__()
+
     def cmd(self, args: argparse.Namespace) -> None:
         print(args)
 
@@ -753,8 +758,13 @@ class BenchmarkLatencyCommand(CLISubcommand):
 
 #TODO: Right code for vllm benchmark-serving command
 class BenchmarkServingCommand(CLISubcommand):
+    def __init___(self):
+        self.name = "benchmark-serve"
+        super().__init__()
+
     def cmd(args: argparse.Namespace) -> None:
         pass
+
     def subparser_init(
             self,
             subparsers: argparse._SubParsersAction) -> FlexibleArgumentParser:
