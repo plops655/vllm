@@ -529,3 +529,12 @@ class MessageQueue:
             buffer_io = MessageQueue.create_from_handle(handle, group_rank)
         buffer_io.wait_until_ready()
         return buffer_io
+
+    def __del__(self):
+        if self._is_local_reader and self.local_socket:
+            self.local_socket.close()
+            self.local_socket = None
+        elif self._is_remote_reader and self.remote_socket:
+            self.remote_socket.close()
+            self.remote_socket = None
+        self.buffer = None

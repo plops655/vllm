@@ -689,14 +689,18 @@ class GroupCoordinator:
 
     def destroy(self):
         if self.device_group is not None:
+            print("Destroying process group device group")
             torch.distributed.destroy_process_group(self.device_group)
             self.device_group = None
         if self.cpu_group is not None:
+            print("Destroying process group cpu group")
             torch.distributed.destroy_process_group(self.cpu_group)
             self.cpu_group = None
         if self.device_communicator is not None:
+            print("Destroying device communicator")
             self.device_communicator.destroy()
         if self.mq_broadcaster is not None:
+            print("Destroying mq broadcaster")
             self.mq_broadcaster = None
 
 
