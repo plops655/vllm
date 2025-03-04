@@ -17,7 +17,7 @@ logger = init_logger(__name__)
 CMD_MODULES = [
     vllm.entrypoints.cli.openai,
     vllm.entrypoints.cli.serve,
-    vllm.entrypoints.cli.benchmark
+    # vllm.entrypoints.cli.benchmark,
 ]
 
 
